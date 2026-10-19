@@ -1,0 +1,8 @@
+{
+  "name": "course-file-builder",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": { "dev": "npx --yes serve public -l 3000" },
+  "dependencies": { "exceljs": "^4.4.0", "jszip": "^3.10.1" },
+  "devDependencies": { "@xmldom/xmldom": "^0.8.10" }
+}
