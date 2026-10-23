@@ -20,23 +20,46 @@
     hideErr();
   }
 
+  const MARK = { ok: "✓", placeholder: "!", missing: "×" };
+  const NOTE = { placeholder: "Template text, edit it", missing: "Not found in the sheet" };
+
   function render(s) {
     $("warnlist").innerHTML = (s.warnings || []).map((w) => `<li>${esc(w)}</li>`).join("");
     $("warn").classList.toggle("show", !!(s.warnings || []).length);
+
+    const meta = [s.program, s.semester && "Semester " + s.semester, s.year].filter(Boolean).map(esc).join(", ");
+    const checks = s.fields.map((f) => `
+      <li><span class="mk ${f.status}" aria-hidden="true">${MARK[f.status]}</span>
+        <span class="k">${esc(f.label)}</span>
+        <span class="v">${f.value ? esc(f.value) : ""}${NOTE[f.status] ? `<small class="${f.status}">${NOTE[f.status]}</small>` : ""}</span></li>`).join("");
+
+    const outcomes = s.outcomes.length ? `
+      <h4>Course outcomes</h4>
+      <ul class="outc">${s.outcomes.map((o) => `
+        <li><div class="top"><span>${esc(o.id)}</span><span>${o.value === null ? "no data" : o.value + "%"}</span></div>
+          <p title="${esc(o.text)}">${esc(o.text)}</p>
+          <i><em data-w="${o.value === null ? 0 : o.value}"></em></i></li>`).join("")}</ul>` : "";
+
+    const avgCell = (a) => a.avg !== null ? `${a.avg}%` : a.mean !== null ? `${a.mean} marks` : `<span class="na">n/a</span>`;
+    const assess = s.assessments.length ? `
+      <h4>Assessments found</h4>
+      <table class="asm"><thead><tr><th scope="col">Name</th><th scope="col">Students</th><th scope="col">Average</th></tr></thead>
+        <tbody>${s.assessments.map((a) => `<tr><td>${esc(a.name)}</td><td>${a.students}</td><td>${avgCell(a)}</td></tr>`).join("")}</tbody></table>` : "";
+
+    const hours = s.hours.length ? `<p class="hours">${s.hours.map(([k, v]) => `${esc(k)} ${esc(v)}`).join(", ")} hours per week</p>` : "";
+
     $("pv").innerHTML = `
+      <h3 class="sum-title">${esc(s.course) || "Course name not found"}</h3>
+      <p class="sum-meta">${meta}</p>
       <div class="stats">
-        <div class="stat"><b>${s.cos}</b><span>Course outcomes</span></div>
         <div class="stat"><b>${s.students}</b><span>Students</span></div>
-        <div class="stat"><b>${s.tools}</b><span>Assessments</span></div>
+        <div class="stat"><b>${s.outcomes.length}</b><span>Outcomes</span></div>
+        <div class="stat"><b>${s.assessments.length}</b><span>Assessments</span></div>
+        <div class="stat"><b>${s.sheets}</b><span>Sheets</span></div>
       </div>
-      <dl>
-        <dt>Course</dt><dd>${esc(s.course) || "Not found"}</dd>
-        <dt>Instructor</dt><dd>${esc(s.faculty)}</dd>
-        <dt>Program</dt><dd>${esc(s.program)}</dd>
-        <dt>Semester</dt><dd>${esc(s.semester)}, ${esc(s.year)}</dd>
-      </dl>
-      <h4>Average CO attainment</h4>
-      ${s.attainment.map((a) => `<div class="att"><span>${esc(a.co)}</span><i><em data-w="${a.value}"></em></i><span>${a.value}%</span></div>`).join("")}`;
+      <h4>What goes on the cover page</h4>
+      <ul class="checks">${checks}</ul>
+      ${outcomes}${assess}${hours}`;
     requestAnimationFrame(() => requestAnimationFrame(() =>
       document.querySelectorAll("#pv em").forEach((e) => (e.style.width = Math.min(100, e.dataset.w) + "%"))));
   }
