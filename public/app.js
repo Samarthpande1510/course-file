@@ -126,4 +126,18 @@
       go.classList.remove("spin");
     }
   });
+
+  // Highlight the nav link for the section in view.
+  const links = [...document.querySelectorAll('.nav ul a')];
+  const byId = Object.fromEntries(links.map((l) => [l.getAttribute("href").slice(1), l]));
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((en) => {
+        if (!en.isIntersecting) return;
+        links.forEach((l) => l.removeAttribute("aria-current"));
+        byId[en.target.id]?.setAttribute("aria-current", "true");
+      });
+    }, { rootMargin: "-35% 0px -55% 0px" });
+    ["build", "requirements", "privacy"].forEach((id) => { const el = document.getElementById(id); if (el) io.observe(el); });
+  }
 })();
